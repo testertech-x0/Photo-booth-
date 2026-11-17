@@ -16,7 +16,7 @@
             border: 1px solid #dbdbdb;
             box-shadow: 0 10px 25px rgba(36, 76, 56, 0.15);
         }
-        /* Enforce True Non-Mirrored View across all elements */
+        /* Enforce True Non-Mirrored View */
         #video, #photoPreview, #videoPreview {
             transform: scaleX(-1);
         }
@@ -43,10 +43,10 @@
             </button>
         </div>
 
-        <!-- Instagram Post/Reel Frame Wrapper (This whole container is captured) -->
+        <!-- Instagram Post/Reel Frame Wrapper -->
         <div id="captureArea" class="ig-frame w-full rounded-xl overflow-hidden relative mb-4">
             
-            <!-- Instagram Header (Top Bar) -->
+            <!-- Instagram Header (Top Bar) - Perfectly Centered -->
             <div class="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-100">
                 <div class="flex items-center space-x-3">
                     <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#C9794B] to-[#244C38] p-[2px] flex items-center justify-center shrink-0">
@@ -81,7 +81,7 @@
                     <span>REC <span id="recTimer">00:00</span></span>
                 </div>
 
-                <!-- Overlay Badge Inside Camera -->
+                <!-- Perfectly Centered Badge Inside Camera -->
                 <div class="absolute bottom-4 left-4 bg-[#244C38]/90 backdrop-blur-md text-[#F5F1E7] px-3.5 py-2 rounded-lg text-xs font-medium flex items-center justify-center space-x-2 border border-[#A5B98A]/30 shadow-md z-10">
                     <i class="fa-solid fa-bowl-food text-[#C9794B] flex items-center justify-center"></i>
                     <span class="leading-none pt-0.5">#ForgeYourStrength</span>
@@ -154,7 +154,7 @@
         &copy; 2026 Forge Bowls. Powered by JC Oats.
     </footer>
 
-    <!-- Include html2canvas and Whammy/RecordRTC or Canvas Recording approach for full frame video export -->
+    <!-- Include html2canvas library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script>
@@ -184,8 +184,9 @@
         const captureArea = document.getElementById('captureArea');
 
         let mediaStream = null;
-        let mediaRecorder = null;
+        let canvasStreamRecorder = null;
         let recordedChunks = [];
+        let recordedVideoBlob = null;
         let timerInterval = null;
 
         // Toggle Like
@@ -195,7 +196,7 @@
             likeBtn.innerHTML = liked ? '<i class="fa-solid fa-heart text-red-500"></i>' : '<i class="fa-regular fa-heart"></i>';
         });
 
-        // Initialize Camera with True View Support
+        // Initialize Camera
         async function initCamera() {
             try {
                 mediaStream = await navigator.mediaDevices.getUserMedia({ 
@@ -249,7 +250,7 @@
             if(timerInterval) clearInterval(timerInterval);
         }
 
-        // --- PHOTO CAPTURE (True View Preserved) ---
+        // --- PHOTO CAPTURE ---
         captureBtn.addEventListener('click', () => {
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth || 640;
@@ -292,14 +293,9 @@
             }
         });
 
-        // --- VIDEO REEL RECORDING (True View Canvas Stream Integration) ---
-        let canvasStreamRecorder = null;
-        let recordedVideoBlob = null;
-
+        // --- VIDEO REEL RECORDING ---
         startRecBtn.addEventListener('click', () => {
             recordedChunks = [];
-            
-            // Create an offscreen canvas to composite the true-view video with the exact orientation into the stream
             const recordCanvas = document.createElement('canvas');
             recordCanvas.width = 640;
             recordCanvas.height = 640;
@@ -310,7 +306,7 @@
                 if(!isRecordingActive) return;
                 rctx.save();
                 rctx.translate(recordCanvas.width, 0);
-                rctx.scale(-1, 1); // Enforce true non-mirrored view in recorded stream
+                rctx.scale(-1, 1);
                 rctx.drawImage(video, 0, 0, recordCanvas.width, recordCanvas.height);
                 rctx.restore();
                 requestAnimationFrame(drawCanvasLoop);
@@ -318,7 +314,6 @@
             drawCanvasLoop();
 
             const canvasStream = recordCanvas.captureStream(30);
-            // Combine camera audio track if available
             const audioTracks = mediaStream.getAudioTracks();
             if(audioTracks.length > 0) {
                 canvasStream.addTrack(audioTracks[0]);
