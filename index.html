@@ -1,396 +1,360 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forge Bowls - Instagram Photo & Reel Booth</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            background-color: #F5F1E7;
-            font-family: system-ui, -apple-system, sans-serif;
-        }
-        .ig-frame {
-            background: #ffffff;
-            border: 1px solid #dbdbdb;
-            box-shadow: 0 10px 25px rgba(36, 76, 56, 0.15);
-        }
-        /* Enforce True Non-Mirrored View */
-        #video, #photoPreview, #videoPreview {
-            transform: scaleX(-1);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Bowls - Instagram Photo & Reel Booth</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  body { background-color:#F5F1E7; font-family:system-ui,-apple-system,sans-serif; }
+  .ig-frame { background:#fff; border:1px solid #dbdbdb; box-shadow:0 10px 25px rgba(36,76,56,.15); }
+  /* No CSS mirroring anywhere: preview, photo and video are all TRUE (non-mirrored) view */
+</style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-between p-4">
 
-    <!-- Header -->
-    <header class="w-full max-w-md text-center py-2">
-        <h1 class="text-2xl font-bold tracking-wider text-[#244C38]">FORGE BOWLS</h1>
-        <p class="text-xs text-[#C9794B] tracking-widest font-semibold uppercase">Instagram Booth (Photo & Reel)</p>
-    </header>
+<header class="w-full max-w-md text-center py-2">
+  <h1 class="text-2xl font-bold tracking-wider text-[#244C38]">FORGE BOWLS</h1>
+  <p class="text-xs text-[#C9794B] tracking-widest font-semibold uppercase">Instagram Booth (Photo & Reel)</p>
+</header>
 
-    <!-- Main Booth Container -->
-    <main class="w-full max-w-md flex flex-col items-center">
-        
-        <!-- Mode Switcher Tabs -->
-        <div class="w-full flex bg-[#e8e2d5] p-1 rounded-xl mb-3 shadow-inner">
-            <button id="photoModeBtn" class="flex-1 py-2 text-xs font-bold rounded-lg bg-[#244C38] text-[#F5F1E7] transition shadow">
-                <i class="fa-solid fa-camera mr-1"></i> Photo Mode
-            </button>
-            <button id="videoModeBtn" class="flex-1 py-2 text-xs font-bold rounded-lg text-[#343A32] transition">
-                <i class="fa-solid fa-video mr-1"></i> Video Reel Mode
-            </button>
+<main class="w-full max-w-md flex flex-col items-center">
+
+  <div class="w-full flex bg-[#e8e2d5] p-1 rounded-xl mb-3 shadow-inner">
+    <button id="photoModeBtn" class="flex-1 py-2 text-xs font-bold rounded-lg bg-[#244C38] text-[#F5F1E7] transition shadow"><i class="fa-solid fa-camera mr-1"></i> Photo Mode</button>
+    <button id="videoModeBtn" class="flex-1 py-2 text-xs font-bold rounded-lg text-[#343A32] transition"><i class="fa-solid fa-video mr-1"></i> Video Reel Mode</button>
+  </div>
+
+  <!-- LIVE frame -->
+  <div id="captureArea" class="ig-frame w-full rounded-xl overflow-hidden relative mb-4">
+    <div class="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-100">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-[#C9794B] to-[#244C38] p-[2px] shrink-0">
+          <div class="w-full h-full bg-white rounded-full grid place-items-center">
+            <span class="block text-[12px] font-bold text-[#244C38] leading-none">FB</span>
+          </div>
         </div>
-
-        <!-- Instagram Post/Reel Frame Wrapper -->
-        <div id="captureArea" class="ig-frame w-full rounded-xl overflow-hidden relative mb-4">
-            
-            <!-- Instagram Header (Top Bar) - Perfectly Centered -->
-            <div class="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-100">
-                <div class="flex items-center space-x-3">
-                    <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#C9794B] to-[#244C38] p-[2px] flex items-center justify-center shrink-0">
-                        <div class="w-full h-full bg-white rounded-full flex items-center justify-center">
-                            <span class="text-[11px] font-bold text-[#244C38] leading-none">FB</span>
-                        </div>
-                    </div>
-                    <div class="flex flex-col justify-center">
-                        <p class="text-xs font-semibold text-gray-900 leading-tight">forgebowls</p>
-                        <p id="accountSubText" class="text-[10px] text-gray-500 leading-tight">Healthy Nutrition Bar</p>
-                    </div>
-                </div>
-                <div class="text-gray-800 text-sm flex items-center justify-center">
-                    <i class="fa-solid fa-ellipsis"></i>
-                </div>
-            </div>
-
-            <!-- Camera / Media Viewport (Square 1:1) -->
-            <div class="relative w-full aspect-square bg-black overflow-hidden flex items-center justify-center">
-                <!-- Live Video Stream -->
-                <video id="video" autoplay playsinline muted class="w-full h-full object-cover"></video>
-                
-                <!-- Captured Snapshot Image Element -->
-                <img id="photoPreview" class="hidden w-full h-full object-cover absolute inset-0" alt="Captured Photo" />
-
-                <!-- Recorded Video Reel Element -->
-                <video id="videoPreview" class="hidden w-full h-full object-cover absolute inset-0" controls playsinline></video>
-
-                <!-- Recording Indicator Badge -->
-                <div id="recIndicator" class="hidden absolute top-3 left-3 bg-red-600 text-white px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center space-x-1.5 animate-pulse z-20">
-                    <span class="w-2 h-2 rounded-full bg-white"></span>
-                    <span>REC <span id="recTimer">00:00</span></span>
-                </div>
-
-                <!-- Perfectly Centered Badge Inside Camera -->
-                <div class="absolute bottom-4 left-4 bg-[#244C38]/90 backdrop-blur-md text-[#F5F1E7] px-3.5 py-2 rounded-lg text-xs font-medium flex items-center justify-center space-x-2 border border-[#A5B98A]/30 shadow-md z-10">
-                    <i class="fa-solid fa-bowl-food text-[#C9794B] flex items-center justify-center"></i>
-                    <span class="leading-none pt-0.5">#ForgeYourStrength</span>
-                </div>
-            </div>
-
-            <!-- Instagram Action Bar -->
-            <div class="bg-white px-4 py-2.5 flex items-center justify-between">
-                <div class="flex items-center space-x-4 text-xl text-gray-800">
-                    <button id="likeBtn" class="hover:text-red-500 transition focus:outline-none flex items-center justify-center"><i class="fa-regular fa-heart"></i></button>
-                    <button class="hover:text-gray-600 transition flex items-center justify-center"><i class="fa-regular fa-comment"></i></button>
-                    <button class="hover:text-gray-600 transition flex items-center justify-center"><i class="fa-regular fa-paper-plane"></i></button>
-                </div>
-                <div class="text-xl text-gray-800 flex items-center justify-center">
-                    <i class="fa-regular fa-bookmark"></i>
-                </div>
-            </div>
-
-            <!-- Instagram Caption Section -->
-            <div class="bg-white px-4 pb-4 pt-1 text-xs text-gray-800 space-y-1">
-                <p><span class="font-semibold">forgebowls</span> Fueling clean gains with 520 kcal power bowls & artisan nutrition! 🌱💪 <span class="text-[#244C38] font-medium">#JC_Oats #ForgeBowls #FitnessReels</span></p>
-                <p class="text-[10px] text-gray-400 uppercase tracking-wider">Just now</p>
-            </div>
-
+        <div class="flex flex-col justify-center">
+          <p class="text-sm font-semibold text-gray-900 leading-tight">forgebowls</p>
+          <p id="accountSubText" class="text-[11px] text-gray-500 leading-tight">Healthy Nutrition Bar</p>
         </div>
+      </div>
+      <div class="text-gray-800 text-sm flex items-center"><i class="fa-solid fa-ellipsis"></i></div>
+    </div>
 
-        <!-- Controls (Photo Mode) -->
-        <div id="photoControls" class="w-full flex space-x-3">
-            <button id="captureBtn" class="flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-camera"></i>
-                <span>Capture Photo</span>
-            </button>
-            <button id="retakePhotoBtn" class="hidden flex-1 bg-[#C9794B] hover:bg-[#b5693f] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-rotate-right"></i>
-                <span>Retake</span>
-            </button>
-            <button id="downloadPhotoBtn" class="hidden flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-download"></i>
-                <span>Download Frame</span>
-            </button>
-        </div>
+    <div class="relative w-full aspect-square bg-black overflow-hidden">
+      <video id="video" autoplay playsinline muted class="w-full h-full object-cover"></video>
 
-        <!-- Controls (Video Reel Mode) -->
-        <div id="videoControls" class="w-full hidden space-x-3">
-            <button id="startRecBtn" class="flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-circle text-red-500"></i>
-                <span>Start Reel Record</span>
-            </button>
-            <button id="stopRecBtn" class="hidden flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 animate-pulse">
-                <i class="fa-solid fa-stop"></i>
-                <span>Stop Recording</span>
-            </button>
-            <button id="retakeVideoBtn" class="hidden flex-1 bg-[#C9794B] hover:bg-[#b5693f] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-rotate-right"></i>
-                <span>Retake Reel</span>
-            </button>
-            <button id="downloadVideoBtn" class="hidden flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-download"></i>
-                <span>Download Reel Frame</span>
-            </button>
-        </div>
+      <div id="recIndicator" class="hidden absolute top-3 left-3 bg-red-600 text-white px-2.5 py-1 rounded-md text-[10px] font-bold items-center gap-1.5 animate-pulse z-20" style="display:none">
+        <span class="w-2 h-2 rounded-full bg-white inline-block"></span>
+        <span class="leading-none">REC <span id="recTimer">00:00</span></span>
+      </div>
 
-        <p id="helperTip" class="text-[11px] text-gray-500 mt-3 text-center">
-            Tip: Switch to Video Reel mode to record video clips inside the Instagram frame!
-        </p>
-    </main>
+      <div class="absolute bottom-4 left-4 bg-[#244C38]/90 backdrop-blur-md text-[#F5F1E7] px-3.5 h-[34px] rounded-lg text-xs font-medium inline-flex items-center gap-2 border border-[#A5B98A]/30 shadow-md z-10 leading-none">
+        <span class="text-[13px] leading-none">🥣</span>
+        <span class="leading-none">#ForgeYourStrength</span>
+      </div>
+    </div>
 
-    <!-- Footer -->
-    <footer class="text-[11px] text-[#343A32] mt-4">
-        &copy; 2026 Forge Bowls. Powered by JC Oats.
-    </footer>
+    <div class="bg-white px-4 py-2.5 flex items-center justify-between">
+      <div class="flex items-center gap-4 text-xl text-gray-800">
+        <button id="likeBtn" class="hover:text-red-500 transition focus:outline-none flex items-center"><i class="fa-regular fa-heart"></i></button>
+        <button class="hover:text-gray-600 transition flex items-center"><i class="fa-regular fa-comment"></i></button>
+        <button class="hover:text-gray-600 transition flex items-center"><i class="fa-regular fa-paper-plane"></i></button>
+      </div>
+      <div class="text-xl text-gray-800 flex items-center"><i class="fa-regular fa-bookmark"></i></div>
+    </div>
 
-    <!-- Include html2canvas library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <div class="bg-white px-4 pb-4 pt-1 text-xs text-gray-800 space-y-1">
+      <p><span class="font-semibold">forgebowls</span> Fueling clean gains with 520 kcal power bowls &amp; artisan nutrition! 🌱💪 <span class="text-[#244C38] font-medium">#JC_Oats #ForgeBowls #FitnessReels</span></p>
+      <p class="text-[10px] text-gray-400 uppercase tracking-wider">Just now</p>
+    </div>
+  </div>
 
-    <script>
-        const video = document.getElementById('video');
-        const photoPreview = document.getElementById('photoPreview');
-        const videoPreview = document.getElementById('videoPreview');
-        
-        const photoModeBtn = document.getElementById('photoModeBtn');
-        const videoModeBtn = document.getElementById('videoModeBtn');
-        const photoControls = document.getElementById('photoControls');
-        const videoControls = document.getElementById('videoControls');
-        const accountSubText = document.getElementById('accountSubText');
-        const helperTip = document.getElementById('helperTip');
+  <!-- RESULT (the exact framed photo/video that gets downloaded) -->
+  <div id="resultBox" class="hidden w-full mb-4 rounded-xl overflow-hidden ig-frame">
+    <img id="resultImg" class="hidden w-full block" alt="Framed photo">
+    <video id="resultVideo" class="hidden w-full block" controls playsinline loop></video>
+  </div>
 
-        const captureBtn = document.getElementById('captureBtn');
-        const retakePhotoBtn = document.getElementById('retakePhotoBtn');
-        const downloadPhotoBtn = document.getElementById('downloadPhotoBtn');
+  <!-- Photo controls -->
+  <div id="photoControls" class="w-full flex gap-3">
+    <button id="captureBtn" class="flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2"><i class="fa-solid fa-camera"></i><span>Capture Photo</span></button>
+    <button id="retakePhotoBtn" class="hidden flex-1 bg-[#C9794B] hover:bg-[#b5693f] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition items-center justify-center gap-2"><i class="fa-solid fa-rotate-right"></i><span>Retake</span></button>
+    <button id="downloadPhotoBtn" class="hidden flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition items-center justify-center gap-2"><i class="fa-solid fa-download"></i><span>Download Frame</span></button>
+  </div>
 
-        const startRecBtn = document.getElementById('startRecBtn');
-        const stopRecBtn = document.getElementById('stopRecBtn');
-        const retakeVideoBtn = document.getElementById('retakeVideoBtn');
-        const downloadVideoBtn = document.getElementById('downloadVideoBtn');
-        const recIndicator = document.getElementById('recIndicator');
-        const recTimer = document.getElementById('recTimer');
+  <!-- Video controls -->
+  <div id="videoControls" class="w-full hidden gap-3">
+    <button id="startRecBtn" class="flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2"><i class="fa-solid fa-circle text-red-500"></i><span>Start Reel Record</span></button>
+    <button id="stopRecBtn" class="hidden flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition items-center justify-center gap-2 animate-pulse"><i class="fa-solid fa-stop"></i><span>Stop Recording</span></button>
+    <button id="retakeVideoBtn" class="hidden flex-1 bg-[#C9794B] hover:bg-[#b5693f] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition items-center justify-center gap-2"><i class="fa-solid fa-rotate-right"></i><span>Retake Reel</span></button>
+    <button id="downloadVideoBtn" class="hidden flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition items-center justify-center gap-2"><i class="fa-solid fa-download"></i><span>Download Reel Frame</span></button>
+  </div>
 
-        const likeBtn = document.getElementById('likeBtn');
-        const captureArea = document.getElementById('captureArea');
+  <p id="helperTip" class="text-[11px] text-gray-500 mt-3 text-center">Tip: Capture and download your custom Instagram photo frame!</p>
+</main>
 
-        let mediaStream = null;
-        let canvasStreamRecorder = null;
-        let recordedChunks = [];
-        let recordedVideoBlob = null;
-        let timerInterval = null;
+<footer class="text-[11px] text-[#343A32] mt-4">&copy; 2026 Forge Bowls. Powered by JC Oats.</footer>
 
-        // Toggle Like
-        let liked = false;
-        likeBtn.addEventListener('click', () => {
-            liked = !liked;
-            likeBtn.innerHTML = liked ? '<i class="fa-solid fa-heart text-red-500"></i>' : '<i class="fa-regular fa-heart"></i>';
-        });
+<script>
+const $ = id => document.getElementById(id);
+const video = $('video'), resultBox = $('resultBox'), resultImg = $('resultImg'), resultVideo = $('resultVideo');
+const captureArea = $('captureArea'), accountSubText = $('accountSubText'), helperTip = $('helperTip');
+const photoModeBtn = $('photoModeBtn'), videoModeBtn = $('videoModeBtn');
+const photoControls = $('photoControls'), videoControls = $('videoControls');
+const captureBtn = $('captureBtn'), retakePhotoBtn = $('retakePhotoBtn'), downloadPhotoBtn = $('downloadPhotoBtn');
+const startRecBtn = $('startRecBtn'), stopRecBtn = $('stopRecBtn'), retakeVideoBtn = $('retakeVideoBtn'), downloadVideoBtn = $('downloadVideoBtn');
+const recIndicator = $('recIndicator'), recTimer = $('recTimer'), likeBtn = $('likeBtn');
 
-        // Initialize Camera
-        async function initCamera() {
-            try {
-                mediaStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 720 } }, 
-                    audio: true 
-                });
-                video.srcObject = mediaStream;
-            } catch (err) {
-                console.error("Camera access error:", err);
-                alert("Camera and Microphone permissions are required!");
-            }
-        }
+let mediaStream = null, recorder = null, chunks = [], videoBlob = null, videoExt = 'webm';
+let timerInterval = null, recording = false, liked = false, mode = 'photo';
 
-        initCamera();
+/* show/hide helpers (buttons use flex, so toggle via style to avoid Tailwind conflicts) */
+const show = (el, d='flex') => { el.classList.remove('hidden'); el.style.display = d; };
+const hide = el => { el.classList.add('hidden'); el.style.display = 'none'; };
 
-        // Switch Modes
-        photoModeBtn.addEventListener('click', () => {
-            photoModeBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-[#244C38] text-[#F5F1E7] transition shadow";
-            videoModeBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg text-[#343A32] transition";
-            photoControls.classList.remove('hidden');
-            videoControls.classList.add('hidden');
-            accountSubText.innerText = "Healthy Nutrition Bar";
-            helperTip.innerText = "Tip: Capture and download your custom Instagram photo frame!";
-            resetViews();
-        });
+likeBtn.addEventListener('click', () => {
+  liked = !liked;
+  likeBtn.innerHTML = liked ? '<i class="fa-solid fa-heart text-red-500"></i>' : '<i class="fa-regular fa-heart"></i>';
+});
 
-        videoModeBtn.addEventListener('click', () => {
-            videoModeBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-[#244C38] text-[#F5F1E7] transition shadow";
-            photoModeBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg text-[#343A32] transition";
-            videoControls.classList.remove('hidden');
-            photoControls.classList.add('hidden');
-            accountSubText.innerText = "Fitness Reel Video";
-            helperTip.innerText = "Tip: Record a video reel inside your Instagram frame!";
-            resetViews();
-        });
+async function initCamera() {
+  const v = { facingMode:'user', width:{ideal:1080}, height:{ideal:1080} };
+  try { mediaStream = await navigator.mediaDevices.getUserMedia({ video:v, audio:true }); }
+  catch (e) {
+    try { mediaStream = await navigator.mediaDevices.getUserMedia({ video:v, audio:false }); }
+    catch (err) { alert('Camera permission is required!'); return; }
+  }
+  video.srcObject = mediaStream;
+}
+initCamera();
 
-        function resetViews() {
-            video.classList.remove('hidden');
-            photoPreview.classList.add('hidden');
-            videoPreview.classList.add('hidden');
-            videoPreview.pause();
-            videoPreview.src = "";
-            captureBtn.classList.remove('hidden');
-            retakePhotoBtn.classList.add('hidden');
-            downloadPhotoBtn.classList.add('hidden');
-            startRecBtn.classList.remove('hidden');
-            stopRecBtn.classList.add('hidden');
-            retakeVideoBtn.classList.add('hidden');
-            downloadVideoBtn.classList.add('hidden');
-            recIndicator.classList.add('hidden');
-            if(timerInterval) clearInterval(timerInterval);
-        }
+/* ================= FRAME RENDERER (draws the full Instagram frame on a canvas) ================= */
+const FW = 540, FH = 752, HEAD = 64, MEDIA = 540, ACT = 52;
+const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 
-        // --- PHOTO CAPTURE ---
-        captureBtn.addEventListener('click', () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 640;
-            const ctx = canvas.getContext('2d');
-            
-            ctx.translate(canvas.width, 0);
-            ctx.scale(-1, 1);
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            photoPreview.src = canvas.toDataURL('image/png');
-            video.classList.add('hidden');
-            photoPreview.classList.remove('hidden');
+function centerText(ctx, text, cx, cy) {            // pixel-accurate vertical + horizontal centring
+  const m = ctx.measureText(text);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(text, cx, cy + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2);
+}
+function rrect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h);
+}
+function heart(ctx, cx, cy, s) {
+  ctx.beginPath();
+  ctx.moveTo(cx, cy + s);
+  ctx.bezierCurveTo(cx - s*1.6, cy - s*0.1, cx - s*0.7, cy - s*1.3, cx, cy - s*0.45);
+  ctx.bezierCurveTo(cx + s*0.7, cy - s*1.3, cx + s*1.6, cy - s*0.1, cx, cy + s);
+  ctx.closePath();
+}
 
-            captureBtn.classList.add('hidden');
-            retakePhotoBtn.classList.remove('hidden');
-            downloadPhotoBtn.classList.remove('hidden');
-        });
+const CAPTION = [
+  ['forgebowls', '600', '#111827'],
+  ...'Fueling clean gains with 520 kcal power bowls & artisan nutrition! 🌱💪'.split(' ').map(w => [w, '400', '#1f2937']),
+  ...'#JC_Oats #ForgeBowls #FitnessReels'.split(' ').map(w => [w, '500', '#244C38'])
+];
 
-        retakePhotoBtn.addEventListener('click', () => {
-            photoPreview.classList.add('hidden');
-            video.classList.remove('hidden');
-            retakePhotoBtn.classList.add('hidden');
-            downloadPhotoBtn.classList.add('hidden');
-            captureBtn.classList.remove('hidden');
-        });
+/* src = <video> or <canvas> holding the TRUE (non-mirrored) camera image */
+function drawFrame(canvas, src) {
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(canvas.width / FW, 0, 0, canvas.height / FH, 0, 0);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, FW, FH);
 
-        downloadPhotoBtn.addEventListener('click', async () => {
-            downloadPhotoBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Generating...</span>';
-            try {
-                const canvas = await html2canvas(captureArea, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-                const link = document.createElement('a');
-                link.download = 'forge-bowls-instagram-frame.png';
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            } catch (err) {
-                alert("Download failed. Long press image to save.");
-            } finally {
-                downloadPhotoBtn.innerHTML = '<i class="fa-solid fa-download"></i><span>Download Frame</span>';
-            }
-        });
+  /* header */
+  const g = ctx.createLinearGradient(58, 12, 18, 52);
+  g.addColorStop(0, '#C9794B'); g.addColorStop(1, '#244C38');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(38, 32, 20, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(38, 32, 17.5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#244C38'; ctx.font = `700 13px ${FONT}`; centerText(ctx, 'FB', 38, 32);
 
-        // --- VIDEO REEL RECORDING ---
-        startRecBtn.addEventListener('click', () => {
-            recordedChunks = [];
-            const recordCanvas = document.createElement('canvas');
-            recordCanvas.width = 640;
-            recordCanvas.height = 640;
-            const rctx = recordCanvas.getContext('2d');
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#111827'; ctx.font = `600 14px ${FONT}`; ctx.fillText('forgebowls', 70, 25);
+  ctx.fillStyle = '#6b7280'; ctx.font = `400 11px ${FONT}`; ctx.fillText(mode === 'video' ? 'Fitness Reel Video' : 'Healthy Nutrition Bar', 70, 42);
+  ctx.fillStyle = '#1f2937';
+  [FW-44, FW-34, FW-24].forEach(x => { ctx.beginPath(); ctx.arc(x, 32, 2, 0, Math.PI*2); ctx.fill(); });
+  ctx.fillStyle = '#f3f4f6'; ctx.fillRect(0, HEAD - 1, FW, 1);
 
-            let isRecordingActive = true;
-            function drawCanvasLoop() {
-                if(!isRecordingActive) return;
-                rctx.save();
-                rctx.translate(recordCanvas.width, 0);
-                rctx.scale(-1, 1);
-                rctx.drawImage(video, 0, 0, recordCanvas.width, recordCanvas.height);
-                rctx.restore();
-                requestAnimationFrame(drawCanvasLoop);
-            }
-            drawCanvasLoop();
+  /* media (square, centre-cropped, NOT mirrored) */
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, HEAD, MEDIA, MEDIA); ctx.clip();
+  ctx.fillStyle = '#000'; ctx.fillRect(0, HEAD, MEDIA, MEDIA);
+  const sw = src.videoWidth || src.width, sh = src.videoHeight || src.height;
+  if (sw && sh) {
+    const side = Math.min(sw, sh);
+    ctx.drawImage(src, (sw - side) / 2, (sh - side) / 2, side, side, 0, HEAD, MEDIA, MEDIA);
+  }
+  ctx.restore();
 
-            const canvasStream = recordCanvas.captureStream(30);
-            const audioTracks = mediaStream.getAudioTracks();
-            if(audioTracks.length > 0) {
-                canvasStream.addTrack(audioTracks[0]);
-            }
+  /* hashtag badge */
+  ctx.font = `500 12px ${FONT}`;
+  const label = '#ForgeYourStrength', lw = ctx.measureText(label).width;
+  const bh = 34, bx = 16, by = HEAD + MEDIA - 16 - bh, pad = 14, emoW = 16, gap = 8;
+  const bw = pad + emoW + gap + lw + pad;
+  rrect(ctx, bx, by, bw, bh, 8);
+  ctx.fillStyle = 'rgba(36,76,56,0.92)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(165,185,138,0.35)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.font = `400 13px ${FONT}`; ctx.fillStyle = '#F5F1E7';
+  centerText(ctx, '🥣', bx + pad + emoW/2, by + bh/2);
+  ctx.font = `500 12px ${FONT}`;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  const m = ctx.measureText(label);
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(label, bx + pad + emoW + gap, by + bh/2 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent)/2);
 
-            try {
-                canvasStreamRecorder = new MediaRecorder(canvasStream, { mimeType: 'video/webm;codecs=vp9' });
-            } catch(e) {
-                canvasStreamRecorder = new MediaRecorder(canvasStream);
-            }
+  /* action bar */
+  const ay = HEAD + MEDIA, cy = ay + ACT/2;
+  ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.strokeStyle = '#1f2937'; ctx.fillStyle = '#ef4444';
+  heart(ctx, 28, cy, 10);
+  if (liked) { ctx.strokeStyle = '#ef4444'; ctx.fill(); }
+  ctx.stroke();
+  ctx.strokeStyle = '#1f2937';
+  ctx.beginPath(); ctx.arc(66, cy, 10, 0, Math.PI*2); ctx.stroke();                      // comment
+  ctx.beginPath(); ctx.moveTo(58, cy+8); ctx.lineTo(55, cy+14); ctx.lineTo(62, cy+11); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(98, cy-9); ctx.lineTo(118, cy); ctx.lineTo(98, cy+9);       // paper plane
+  ctx.lineTo(102, cy); ctx.closePath(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(102, cy); ctx.lineTo(118, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(FW-34, cy-10); ctx.lineTo(FW-18, cy-10); ctx.lineTo(FW-18, cy+10);   // bookmark
+  ctx.lineTo(FW-26, cy+4); ctx.lineTo(FW-34, cy+10); ctx.closePath(); ctx.stroke();
 
-            canvasStreamRecorder.ondataavailable = (e) => {
-                if(e.data.size > 0) recordedChunks.push(e.data);
-            };
+  /* caption */
+  let x = 16, y = ay + ACT + 8;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  for (const [w, wt, col] of CAPTION) {
+    ctx.font = `${wt} 13px ${FONT}`;
+    const ww = ctx.measureText(w).width, sp = ctx.measureText(' ').width;
+    if (x + ww > FW - 16 && x > 16) { x = 16; y += 19; }
+    ctx.fillStyle = col; ctx.fillText(w, x, y);
+    x += ww + sp;
+  }
+  y += 24;
+  ctx.fillStyle = '#9ca3af'; ctx.font = `400 10px ${FONT}`;
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '1px';
+  ctx.fillText('JUST NOW', 16, y);
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
-            canvasStreamRecorder.onstop = () => {
-                isRecordingActive = false;
-                recordedVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
-                const videoUrl = URL.createObjectURL(recordedVideoBlob);
-                videoPreview.src = videoUrl;
-                
-                video.classList.add('hidden');
-                videoPreview.classList.remove('hidden');
-                videoPreview.controls = true;
+  /* outer border */
+  ctx.strokeStyle = '#dbdbdb'; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, FW-1, FH-1);
+}
 
-                startRecBtn.classList.add('hidden');
-                stopRecBtn.classList.add('hidden');
-                retakeVideoBtn.classList.remove('hidden');
-                downloadVideoBtn.classList.remove('hidden');
-            };
+/* ================= MODE SWITCH ================= */
+function resetViews() {
+  if (recording && recorder && recorder.state !== 'inactive') { recorder.onstop = null; recorder.stop(); }
+  recording = false; clearInterval(timerInterval);
+  resultVideo.pause(); resultVideo.removeAttribute('src'); resultVideo.load();
+  resultImg.removeAttribute('src');
+  hide(resultBox); captureArea.classList.remove('hidden'); captureArea.style.display = '';
+  hide(recIndicator);
+  show(captureBtn); hide(retakePhotoBtn); hide(downloadPhotoBtn);
+  show(startRecBtn); hide(stopRecBtn); hide(retakeVideoBtn); hide(downloadVideoBtn);
+}
+photoModeBtn.addEventListener('click', () => {
+  mode = 'photo';
+  photoModeBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-[#244C38] text-[#F5F1E7] transition shadow';
+  videoModeBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-[#343A32] transition';
+  show(photoControls); hide(videoControls);
+  accountSubText.innerText = 'Healthy Nutrition Bar';
+  helperTip.innerText = 'Tip: Capture and download your custom Instagram photo frame!';
+  resetViews();
+});
+videoModeBtn.addEventListener('click', () => {
+  mode = 'video';
+  videoModeBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-[#244C38] text-[#F5F1E7] transition shadow';
+  photoModeBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-[#343A32] transition';
+  show(videoControls); hide(photoControls);
+  accountSubText.innerText = 'Fitness Reel Video';
+  helperTip.innerText = 'Tip: Record a video reel inside your Instagram frame!';
+  resetViews();
+});
+resetViews(); show(photoControls); hide(videoControls);
 
-            canvasStreamRecorder.start();
-            startRecBtn.classList.add('hidden');
-            stopRecBtn.classList.remove('hidden');
-            recIndicator.classList.remove('hidden');
+/* ================= PHOTO ================= */
+let photoDataUrl = '';
+captureBtn.addEventListener('click', () => {
+  if (!video.videoWidth) return;
+  const out = document.createElement('canvas');
+  out.width = 1080; out.height = Math.round(1080 * FH / FW);   // full frame, 2x
+  drawFrame(out, video);                                       // true view + Instagram frame
+  photoDataUrl = out.toDataURL('image/png');
+  resultImg.src = photoDataUrl;
+  captureArea.classList.add('hidden'); captureArea.style.display = 'none';
+  show(resultBox, 'block'); show(resultImg, 'block'); hide(resultVideo);
+  hide(captureBtn); show(retakePhotoBtn); show(downloadPhotoBtn);
+});
+retakePhotoBtn.addEventListener('click', () => {
+  hide(resultBox); captureArea.classList.remove('hidden'); captureArea.style.display = '';
+  hide(retakePhotoBtn); hide(downloadPhotoBtn); show(captureBtn);
+});
+downloadPhotoBtn.addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = photoDataUrl; a.download = 'forge-bowls-instagram-frame.png';
+  document.body.appendChild(a); a.click(); a.remove();
+});
 
-            let seconds = 0;
-            recTimer.innerText = "00:00";
-            timerInterval = setInterval(() => {
-                seconds++;
-                let m = String(Math.floor(seconds / 60)).padStart(2, '0');
-                let s = String(seconds % 60).padStart(2, '0');
-                recTimer.innerText = `${m}:${s}`;
-            }, 1000);
-        });
+/* ================= VIDEO REEL ================= */
+function pickMime() {
+  const list = ['video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+  return list.find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
+}
 
-        stopRecBtn.addEventListener('click', () => {
-            if(canvasStreamRecorder && canvasStreamRecorder.state !== 'inactive') {
-                canvasStreamRecorder.stop();
-            }
-            clearInterval(timerInterval);
-            recIndicator.classList.add('hidden');
-        });
+startRecBtn.addEventListener('click', () => {
+  if (!mediaStream || !video.videoWidth) return;
+  chunks = [];
+  const rc = document.createElement('canvas');
+  rc.width = 720; rc.height = 1002;                     // full Instagram frame (even dimensions)
+  recording = true;
+  (function loop() { if (!recording) return; drawFrame(rc, video); requestAnimationFrame(loop); })();
 
-        retakeVideoBtn.addEventListener('click', () => {
-            videoPreview.classList.add('hidden');
-            videoPreview.src = "";
-            video.classList.remove('hidden');
-            retakeVideoBtn.classList.add('hidden');
-            downloadVideoBtn.classList.add('hidden');
-            startRecBtn.classList.remove('hidden');
-        });
+  const stream = rc.captureStream(30);
+  mediaStream.getAudioTracks().forEach(t => stream.addTrack(t));
 
-        downloadVideoBtn.addEventListener('click', () => {
-            if(!recordedVideoBlob) return;
-            const url = URL.createObjectURL(recordedVideoBlob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = 'forge-bowls-instagram-reel.webm';
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 100);
-        });
-    </script>
+  const mime = pickMime();
+  try { recorder = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 4000000 } : undefined); }
+  catch (e) { recorder = new MediaRecorder(stream); }
+  videoExt = (recorder.mimeType || mime).includes('mp4') ? 'mp4' : 'webm';
+
+  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+  recorder.onstop = () => {
+    recording = false;
+    videoBlob = new Blob(chunks, { type: recorder.mimeType || (videoExt === 'mp4' ? 'video/mp4' : 'video/webm') });
+    resultVideo.src = URL.createObjectURL(videoBlob);
+    captureArea.classList.add('hidden'); captureArea.style.display = 'none';
+    show(resultBox, 'block'); show(resultVideo, 'block'); hide(resultImg);
+    resultVideo.play().catch(() => {});
+    hide(startRecBtn); hide(stopRecBtn); show(retakeVideoBtn); show(downloadVideoBtn);
+  };
+  recorder.start(250);
+
+  hide(startRecBtn); show(stopRecBtn); show(recIndicator);
+  let s = 0; recTimer.innerText = '00:00'; clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    s++; recTimer.innerText = String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+  }, 1000);
+});
+
+stopRecBtn.addEventListener('click', () => {
+  clearInterval(timerInterval); hide(recIndicator);
+  if (recorder && recorder.state !== 'inactive') recorder.stop();
+});
+
+retakeVideoBtn.addEventListener('click', () => {
+  resultVideo.pause(); resultVideo.removeAttribute('src'); resultVideo.load();
+  hide(resultBox); captureArea.classList.remove('hidden'); captureArea.style.display = '';
+  hide(retakeVideoBtn); hide(downloadVideoBtn); show(startRecBtn);
+});
+
+downloadVideoBtn.addEventListener('click', () => {
+  if (!videoBlob) return;
+  const url = URL.createObjectURL(videoBlob);
+  const a = document.createElement('a');
+  a.style.display = 'none'; a.href = url; a.download = 'forge-bowls-instagram-reel.' + videoExt;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
+});
+</script>
 </body>
 </html>
