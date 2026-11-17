@@ -16,6 +16,10 @@
             border: 1px solid #dbdbdb;
             box-shadow: 0 10px 25px rgba(36, 76, 56, 0.15);
         }
+        /* Fix mirror effect for normal camera view */
+        #video {
+            transform: scaleX(1); 
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-between p-4">
@@ -29,8 +33,8 @@
     <!-- Main Booth Container -->
     <main class="w-full max-w-md flex flex-col items-center">
         
-        <!-- Instagram Post Frame Wrapper -->
-        <div class="ig-frame w-full rounded-xl overflow-hidden relative mb-4">
+        <!-- Instagram Post Frame Wrapper (This entire element gets rendered into download) -->
+        <div id="captureArea" class="ig-frame w-full rounded-xl overflow-hidden relative mb-4">
             
             <!-- Instagram Header (Top Bar) -->
             <div class="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-100">
@@ -55,8 +59,8 @@
                 <!-- Live Video Stream -->
                 <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
                 
-                <!-- Captured Snapshot Canvas (Hidden initially) -->
-                <canvas id="canvas" class="hidden w-full h-full object-cover absolute inset-0"></canvas>
+                <!-- Captured Snapshot Image Element -->
+                <img id="photoPreview" class="hidden w-full h-full object-cover absolute inset-0" alt="Captured Photo" />
 
                 <!-- Live Organic Overlay Badge inside camera -->
                 <div class="absolute bottom-3 left-3 bg-[#244C38]/85 backdrop-blur-md text-[#F5F1E7] px-3 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-2 border border-[#A5B98A]/30">
@@ -68,7 +72,7 @@
             <!-- Instagram Action Bar -->
             <div class="bg-white px-4 py-2.5 flex items-center justify-between">
                 <div class="flex items-center space-x-4 text-xl text-gray-800">
-                    <button id="likeBtn" class="hover:text-red-500 transition"><i class="fa-regular fa-heart"></i></button>
+                    <button id="likeBtn" class="hover:text-red-500 transition focus:outline-none"><i class="fa-regular fa-heart"></i></button>
                     <button class="hover:text-gray-600 transition"><i class="fa-regular fa-comment"></i></button>
                     <button class="hover:text-gray-600 transition"><i class="fa-regular fa-paper-plane"></i></button>
                 </div>
@@ -95,15 +99,14 @@
                 <i class="fa-solid fa-rotate-right"></i>
                 <span>Retake</span>
             </button>
-            <a id="downloadBtn" download="forge-bowls-insta.png" class="hidden flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-center">
+            <button id="downloadBtn" class="hidden flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
                 <i class="fa-solid fa-download"></i>
-                <span>Download</span>
-            </a>
+                <span>Download Frame</span>
+            </button>
         </div>
 
-        <!-- Fallback Note for Mobile Users -->
         <p class="text-[11px] text-gray-500 mt-3 text-center">
-            Tip: If download doesn't trigger automatically, simply long-press the captured photo to save!
+            Tip: Click 'Download Frame' to save the complete Instagram post with your photo!
         </p>
     </main>
 
@@ -112,14 +115,20 @@
         &copy; 2026 Forge Bowls. Powered by JC Oats.
     </footer>
 
+    <!-- Include html2canvas library to render the entire frame -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <!-- JavaScript Logic -->
     <script>
         const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
+        const photoPreview = document.getElementById('photoPreview');
         const captureBtn = document.getElementById('captureBtn');
         const retakeBtn = document.getElementById('retakeBtn');
         const downloadBtn = document.getElementById('downloadBtn');
         const likeBtn = document.getElementById('likeBtn');
+        const captureArea = document.getElementById('captureArea');
+
+        let capturedDataUrl = '';
 
         // Toggle Heart Like
         let liked = false;
@@ -132,7 +141,7 @@
             }
         });
 
-        // Initialize Camera Stream
+        // Initialize Camera Stream (Without unwanted mirror flip)
         async function initCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -148,27 +157,24 @@
 
         initCamera();
 
-        // Capture Snapshot
+        // Capture Snapshot using Canvas element to freeze frame
         captureBtn.addEventListener('click', () => {
-            const width = video.videoWidth;
-            const height = video.videoHeight;
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 640;
+            const ctx = canvas.getContext('2d');
             
-            canvas.width = width;
-            canvas.height = height;
+            // Draw current video frame
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            const context = canvas.getContext('2d');
-            // Draw video frame to canvas
-            context.drawImage(video, 0, 0, width, height);
-
-            // Hide video, show canvas
+            // Set image preview source
+            photoPreview.src = canvas.toDataURL('image/png');
+            
+            // Hide live video, show static photo preview
             video.classList.add('hidden');
-            canvas.classList.remove('hidden');
+            photoPreview.classList.remove('hidden');
 
-            // Generate image data URL
-            const dataUrl = canvas.toDataURL('image/png');
-            downloadBtn.href = dataUrl;
-
-            // Switch UI Buttons
+            // Toggle buttons
             captureBtn.classList.add('hidden');
             retakeBtn.classList.remove('hidden');
             downloadBtn.classList.remove('hidden');
@@ -176,12 +182,37 @@
 
         // Retake Photo
         retakeBtn.addEventListener('click', () => {
-            canvas.classList.add('hidden');
+            photoPreview.classList.add('hidden');
             video.classList.remove('hidden');
 
             retakeBtn.classList.add('hidden');
             downloadBtn.classList.add('hidden');
             captureBtn.classList.remove('hidden');
+        });
+
+        // Download Entire Instagram Frame using html2canvas
+        downloadBtn.addEventListener('click', async () => {
+            downloadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Generating...</span>';
+            
+            try {
+                // Render the complete IG frame wrapper into a high-res canvas
+                const canvas = await html2canvas(captureArea, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff'
+                });
+
+                const link = document.createElement('a');
+                link.download = 'forge-bowls-instagram-frame.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (err) {
+                console.error("Download error:", err);
+                alert("Failed to generate download. Please try long-pressing the image to save.");
+            } finally {
+                downloadBtn.innerHTML = '<i class="fa-solid fa-download"></i><span>Download Frame</span>';
+            }
         });
     </script>
 </body>
