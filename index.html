@@ -22,6 +22,11 @@
 
 <main class="w-full max-w-md flex flex-col items-center">
 
+  <div id="camStatus" class="hidden w-full mb-3 rounded-xl border border-[#C9794B]/40 bg-[#fff6ee] text-[#7a4524] text-xs p-3 items-center justify-between gap-3">
+    <span id="camStatusMsg" class="leading-snug">Starting camera…</span>
+    <button id="camRetryBtn" type="button" class="shrink-0 bg-[#244C38] text-[#F5F1E7] font-semibold px-3 h-8 rounded-lg">Enable Camera</button>
+  </div>
+
   <div class="w-full flex bg-[#e8e2d5] p-1 rounded-xl mb-3 shadow-inner">
     <button id="photoModeBtn" class="flex-1 py-2 text-xs font-bold rounded-lg bg-[#244C38] text-[#F5F1E7] transition shadow"><i class="fa-solid fa-camera mr-1"></i> Photo Mode</button>
     <button id="videoModeBtn" class="flex-1 py-2 text-xs font-bold rounded-lg text-[#343A32] transition"><i class="fa-solid fa-video mr-1"></i> Video Reel Mode</button>
@@ -134,16 +139,55 @@ likeBtn.addEventListener('click', () => {
   likeBtn.innerHTML = liked ? '<i class="fa-solid fa-heart text-red-500"></i>' : '<i class="fa-regular fa-heart"></i>';
 });
 
-async function initCamera() {
-  const v = { facingMode:'user', width:{ideal:1080}, height:{ideal:1080} };
-  try { mediaStream = await navigator.mediaDevices.getUserMedia({ video:v, audio:true }); }
-  catch (e) {
-    try { mediaStream = await navigator.mediaDevices.getUserMedia({ video:v, audio:false }); }
-    catch (err) { alert('Camera permission is required!'); return; }
-  }
-  video.srcObject = mediaStream;
+const camStatus = $('camStatus'), camStatusMsg = $('camStatusMsg');
+function setStatus(msg) {
+  if (!msg) { camStatus.classList.add('hidden'); camStatus.style.display = 'none'; return; }
+  camStatusMsg.innerText = msg; camStatus.classList.remove('hidden'); camStatus.style.display = 'flex';
 }
+const cameraReady = () => !!(mediaStream && video.videoWidth > 0 && video.readyState >= 2);
+
+let camStarting = false;
+async function initCamera() {
+  if (camStarting) return;
+  camStarting = true;
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setStatus('Camera is not available here. Open this page over https:// (or http://localhost), directly in Chrome/Safari — not inside a preview frame or a file viewer.');
+      return;
+    }
+    setStatus('Starting camera… please tap Allow when your browser asks.');
+    if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+    const v = { facingMode:'user', width:{ideal:1080}, height:{ideal:1080} };
+    try { mediaStream = await navigator.mediaDevices.getUserMedia({ video:v, audio:true }); }
+    catch (e) {
+      if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) {
+        // may be only the microphone that was refused; try video-only before giving up
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video:v, audio:false });
+      } else { mediaStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false }); }
+    }
+    video.srcObject = mediaStream;
+    video.muted = true; video.setAttribute('playsinline', '');
+    await video.play().catch(() => {});
+    setStatus('');
+  } catch (err) {
+    mediaStream = null;
+    const n = err && err.name;
+    setStatus(n === 'NotAllowedError' ? 'Camera permission was blocked. Allow camera access in the browser address bar / site settings, then tap Enable Camera.'
+            : n === 'NotFoundError'   ? 'No camera was found on this device.'
+            : n === 'NotReadableError'? 'The camera is being used by another app. Close it and tap Enable Camera.'
+            : 'Could not start the camera (' + (n || 'unknown error') + '). Tap Enable Camera to retry.');
+  } finally { camStarting = false; }
+}
+$('camRetryBtn').addEventListener('click', initCamera);
 initCamera();
+
+/* returns true when the camera is live; otherwise tells the user why and retries on this tap */
+function requireCamera() {
+  if (cameraReady()) return true;
+  if (!mediaStream) { initCamera(); }
+  else { setStatus('Camera is still starting… try again in a moment.'); video.play().catch(() => {}); }
+  return false;
+}
 
 /* ================= FRAME RENDERER (draws the full Instagram frame on a canvas) ================= */
 const FW = 540, FH = 752, HEAD = 64, MEDIA = 540, ACT = 52;
@@ -290,7 +334,7 @@ resetViews(); show(photoControls); hide(videoControls);
 /* ================= PHOTO ================= */
 let photoDataUrl = '';
 captureBtn.addEventListener('click', () => {
-  if (!video.videoWidth) return;
+  if (!requireCamera()) return;
   const out = document.createElement('canvas');
   out.width = 1080; out.height = Math.round(1080 * FH / FW);   // full frame, 2x
   drawFrame(out, video);                                       // true view + Instagram frame
@@ -304,58 +348,4 @@ retakePhotoBtn.addEventListener('click', () => {
   hide(resultBox); captureArea.classList.remove('hidden'); captureArea.style.display = '';
   hide(retakePhotoBtn); hide(downloadPhotoBtn); show(captureBtn);
 });
-downloadPhotoBtn.addEventListener('click', () => {
-  const a = document.createElement('a');
-  a.href = photoDataUrl; a.download = 'forge-bowls-instagram-frame.png';
-  document.body.appendChild(a); a.click(); a.remove();
-});
-
-/* ================= VIDEO REEL ================= */
-function pickMime() {
-  const list = ['video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
-  return list.find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
-}
-
-startRecBtn.addEventListener('click', () => {
-  if (!mediaStream || !video.videoWidth) return;
-  chunks = [];
-  const rc = document.createElement('canvas');
-  rc.width = 720; rc.height = 1002;                     // full Instagram frame (even dimensions)
-  recording = true;
-  (function loop() { if (!recording) return; drawFrame(rc, video); requestAnimationFrame(loop); })();
-
-  const stream = rc.captureStream(30);
-  mediaStream.getAudioTracks().forEach(t => stream.addTrack(t));
-
-  const mime = pickMime();
-  try { recorder = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 4000000 } : undefined); }
-  catch (e) { recorder = new MediaRecorder(stream); }
-  videoExt = (recorder.mimeType || mime).includes('mp4') ? 'mp4' : 'webm';
-
-  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-  recorder.onstop = () => {
-    recording = false;
-    videoBlob = new Blob(chunks, { type: recorder.mimeType || (videoExt === 'mp4' ? 'video/mp4' : 'video/webm') });
-    resultVideo.src = URL.createObjectURL(videoBlob);
-    captureArea.classList.add('hidden'); captureArea.style.display = 'none';
-    show(resultBox, 'block'); show(resultVideo, 'block'); hide(resultImg);
-    resultVideo.play().catch(() => {});
-    hide(startRecBtn); hide(stopRecBtn); show(retakeVideoBtn); show(downloadVideoBtn);
-  };
-  recorder.start(250);
-
-  hide(startRecBtn); show(stopRecBtn); show(recIndicator);
-  let s = 0; recTimer.innerText = '00:00'; clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    s++; recTimer.innerText = String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
-  }, 1000);
-});
-
-stopRecBtn.addEventListener('click', () => {
-  clearInterval(timerInterval); hide(recIndicator);
-  if (recorder && recorder.state !== 'inactive') recorder.stop();
-});
-
-retakeVideoBtn.addEventListener('click', () => {
-  resultVideo.pause(); resultVideo.removeAttribute('src'); resultVideo.load();
-  hide(resultBox); captureArea.classList.remove('hidden'); captureArea.styl
+downloadPhotoBtn
