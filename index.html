@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forge Bowls - Instagram Photo Booth</title>
+    <title>Forge Bowls - Instagram Photo & Reel Booth</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -16,29 +16,38 @@
             border: 1px solid #dbdbdb;
             box-shadow: 0 10px 25px rgba(36, 76, 56, 0.15);
         }
-        #video {
-            transform: scaleX(1); 
+        #video, #photoPreview, #videoPreview {
+            transform: scaleX(-1); /* True non-mirrored view */
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-between p-4">
 
     <!-- Header -->
-    <header class="w-full max-w-md text-center py-3">
+    <header class="w-full max-w-md text-center py-2">
         <h1 class="text-2xl font-bold tracking-wider text-[#244C38]">FORGE BOWLS</h1>
-        <p class="text-xs text-[#C9794B] tracking-widest font-semibold uppercase">Instagram Photo Booth</p>
+        <p class="text-xs text-[#C9794B] tracking-widest font-semibold uppercase">Instagram Booth (Photo & Reel)</p>
     </header>
 
     <!-- Main Booth Container -->
     <main class="w-full max-w-md flex flex-col items-center">
         
-        <!-- Instagram Post Frame Wrapper -->
+        <!-- Mode Switcher Tabs (Photo / Video Reel) -->
+        <div class="w-full flex bg-[#e8e2d5] p-1 rounded-xl mb-3 shadow-inner">
+            <button id="photoModeBtn" class="flex-1 py-2 text-xs font-bold rounded-lg bg-[#244C38] text-[#F5F1E7] transition shadow">
+                <i class="fa-solid fa-camera mr-1"></i> Photo Mode
+            </button>
+            <button id="videoModeBtn" class="flex-1 py-2 text-xs font-bold rounded-lg text-[#343A32] transition">
+                <i class="fa-solid fa-video mr-1"></i> Video Reel Mode
+            </button>
+        </div>
+
+        <!-- Instagram Post/Reel Frame Wrapper -->
         <div id="captureArea" class="ig-frame w-full rounded-xl overflow-hidden relative mb-4">
             
-            <!-- Instagram Header (Top Bar) - Perfectly Centered Items -->
+            <!-- Instagram Header (Top Bar) - Perfectly Centered -->
             <div class="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-100">
                 <div class="flex items-center space-x-3">
-                    <!-- Perfectly Centered Logo Circle -->
                     <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#C9794B] to-[#244C38] p-[2px] flex items-center justify-center shrink-0">
                         <div class="w-full h-full bg-white rounded-full flex items-center justify-center">
                             <span class="text-[11px] font-bold text-[#244C38] leading-none">FB</span>
@@ -46,7 +55,7 @@
                     </div>
                     <div class="flex flex-col justify-center">
                         <p class="text-xs font-semibold text-gray-900 leading-tight">forgebowls</p>
-                        <p class="text-[10px] text-gray-500 leading-tight">Healthy Nutrition Bar</p>
+                        <p id="accountSubText" class="text-[10px] text-gray-500 leading-tight">Healthy Nutrition Bar</p>
                     </div>
                 </div>
                 <div class="text-gray-800 text-sm flex items-center justify-center">
@@ -54,16 +63,25 @@
                 </div>
             </div>
 
-            <!-- Camera / Photo Viewport (Square 1:1) -->
+            <!-- Camera / Media Viewport (Square 1:1) -->
             <div class="relative w-full aspect-square bg-black overflow-hidden flex items-center justify-center">
                 <!-- Live Video Stream -->
-                <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
+                <video id="video" autoplay playsinline muted class="w-full h-full object-cover"></video>
                 
                 <!-- Captured Snapshot Image Element -->
                 <img id="photoPreview" class="hidden w-full h-full object-cover absolute inset-0" alt="Captured Photo" />
 
+                <!-- Recorded Video Reel Element -->
+                <video id="videoPreview" class="hidden w-full h-full object-cover absolute inset-0" controls playsinline></video>
+
+                <!-- Recording Indicator Badge (Hidden by default) -->
+                <div id="recIndicator" class="hidden absolute top-3 left-3 bg-red-600 text-white px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center space-x-1.5 animate-pulse z-20">
+                    <span class="w-2 h-2 rounded-full bg-white"></span>
+                    <span>REC <span id="recTimer">00:00</span></span>
+                </div>
+
                 <!-- Perfectly Centered Live Organic Overlay Badge Inside Camera -->
-                <div class="absolute bottom-4 left-4 bg-[#244C38]/90 backdrop-blur-md text-[#F5F1E7] px-3.5 py-2 rounded-lg text-xs font-medium flex items-center justify-center space-x-2 border border-[#A5B98A]/30 shadow-md">
+                <div class="absolute bottom-4 left-4 bg-[#244C38]/90 backdrop-blur-md text-[#F5F1E7] px-3.5 py-2 rounded-lg text-xs font-medium flex items-center justify-center space-x-2 border border-[#A5B98A]/30 shadow-md z-10">
                     <i class="fa-solid fa-bowl-food text-[#C9794B] flex items-center justify-center"></i>
                     <span class="leading-none pt-0.5">#ForgeYourStrength</span>
                 </div>
@@ -83,30 +101,50 @@
 
             <!-- Instagram Caption Section -->
             <div class="bg-white px-4 pb-4 pt-1 text-xs text-gray-800 space-y-1">
-                <p><span class="font-semibold">forgebowls</span> Fueling clean gains with 520 kcal power bowls & artisan nutrition! 🌱💪 <span class="text-[#244C38] font-medium">#JC_Oats #ForgeBowls #FitnessNutrition</span></p>
+                <p><span class="font-semibold">forgebowls</span> Fueling clean gains with 520 kcal power bowls & artisan nutrition! 🌱💪 <span class="text-[#244C38] font-medium">#JC_Oats #ForgeBowls #FitnessReels</span></p>
                 <p class="text-[10px] text-gray-400 uppercase tracking-wider">Just now</p>
             </div>
 
         </div>
 
-        <!-- Controls / Buttons -->
-        <div class="w-full flex space-x-3">
+        <!-- Controls / Buttons (Photo Mode) -->
+        <div id="photoControls" class="w-full flex space-x-3">
             <button id="captureBtn" class="flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
                 <i class="fa-solid fa-camera"></i>
                 <span>Capture Photo</span>
             </button>
-            <button id="retakeBtn" class="hidden flex-1 bg-[#C9794B] hover:bg-[#b5693f] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+            <button id="retakePhotoBtn" class="hidden flex-1 bg-[#C9794B] hover:bg-[#b5693f] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
                 <i class="fa-solid fa-rotate-right"></i>
                 <span>Retake</span>
             </button>
-            <button id="downloadBtn" class="hidden flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+            <button id="downloadPhotoBtn" class="hidden flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
                 <i class="fa-solid fa-download"></i>
                 <span>Download Frame</span>
             </button>
         </div>
 
-        <p class="text-[11px] text-gray-500 mt-3 text-center">
-            Tip: Click 'Download Frame' to save the complete Instagram post with your photo!
+        <!-- Controls / Buttons (Video Reel Mode) -->
+        <div id="videoControls" class="w-full hidden space-x-3">
+            <button id="startRecBtn" class="flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-circle text-red-500"></i>
+                <span>Start Reel Record</span>
+            </button>
+            <button id="stopRecBtn" class="hidden flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 animate-pulse">
+                <i class="fa-solid fa-stop"></i>
+                <span>Stop Recording</span>
+            </button>
+            <button id="retakeVideoBtn" class="hidden flex-1 bg-[#C9794B] hover:bg-[#b5693f] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>Retake Reel</span>
+            </button>
+            <a id="downloadVideoBtn" class="hidden flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-center" download="forge-bowls-reel.webm">
+                <i class="fa-solid fa-download"></i>
+                <span>Download Reel</span>
+            </a>
+        </div>
+
+        <p id="helperTip" class="text-[11px] text-gray-500 mt-3 text-center">
+            Tip: Switch to Video Reel mode to record video clips inside the Instagram frame!
         </p>
     </main>
 
@@ -115,97 +153,209 @@
         &copy; 2026 Forge Bowls. Powered by JC Oats.
     </footer>
 
-    <!-- Include html2canvas library to render the entire frame -->
+    <!-- Include html2canvas library for photos -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <!-- JavaScript Logic -->
     <script>
         const video = document.getElementById('video');
         const photoPreview = document.getElementById('photoPreview');
+        const videoPreview = document.getElementById('videoPreview');
+        
+        const photoModeBtn = document.getElementById('photoModeBtn');
+        const videoModeBtn = document.getElementById('videoModeBtn');
+        const photoControls = document.getElementById('photoControls');
+        const videoControls = document.getElementById('videoControls');
+        const accountSubText = document.getElementById('accountSubText');
+        const helperTip = document.getElementById('helperTip');
+
+        // Photo elements
         const captureBtn = document.getElementById('captureBtn');
-        const retakeBtn = document.getElementById('retakeBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
+        const retakePhotoBtn = document.getElementById('retakePhotoBtn');
+        const downloadPhotoBtn = document.getElementById('downloadPhotoBtn');
+
+        // Video elements
+        const startRecBtn = document.getElementById('startRecBtn');
+        const stopRecBtn = document.getElementById('stopRecBtn');
+        const retakeVideoBtn = document.getElementById('retakeVideoBtn');
+        const downloadVideoBtn = document.getElementById('downloadVideoBtn');
+        const recIndicator = document.getElementById('recIndicator');
+        const recTimer = document.getElementById('recTimer');
+
         const likeBtn = document.getElementById('likeBtn');
         const captureArea = document.getElementById('captureArea');
 
-        // Toggle Heart Like
+        let mediaStream = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let timerInterval = null;
+        let currentMode = 'photo';
+
+        // Toggle Like
         let liked = false;
         likeBtn.addEventListener('click', () => {
             liked = !liked;
-            if(liked) {
-                likeBtn.innerHTML = '<i class="fa-solid fa-heart text-red-500"></i>';
-            } else {
-                likeBtn.innerHTML = '<i class="fa-regular fa-heart"></i>';
-            }
+            likeBtn.innerHTML = liked ? '<i class="fa-solid fa-heart text-red-500"></i>' : '<i class="fa-regular fa-heart"></i>';
         });
 
-        // Initialize Camera Stream
+        // Initialize Camera
         async function initCamera() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
+                mediaStream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: 'user', width: { ideal: 1080 }, height: { ideal: 1080 } }, 
-                    audio: false 
+                    audio: true 
                 });
-                video.srcObject = stream;
+                video.srcObject = mediaStream;
             } catch (err) {
                 console.error("Camera access error:", err);
-                alert("Camera permission is required to use the photo booth!");
+                alert("Camera and Microphone permissions are required!");
             }
         }
 
         initCamera();
 
-        // Capture Snapshot
+        // Switch Modes
+        photoModeBtn.addEventListener('click', () => {
+            currentMode = 'photo';
+            photoModeBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-[#244C38] text-[#F5F1E7] transition shadow";
+            videoModeBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg text-[#343A32] transition";
+            photoControls.classList.remove('hidden');
+            videoControls.classList.add('hidden');
+            accountSubText.innerText = "Healthy Nutrition Bar";
+            helperTip.innerText = "Tip: Capture and download your custom Instagram photo frame!";
+            resetViews();
+        });
+
+        videoModeBtn.addEventListener('click', () => {
+            currentMode = 'video';
+            videoModeBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-[#244C38] text-[#F5F1E7] transition shadow";
+            photoModeBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg text-[#343A32] transition";
+            videoControls.classList.remove('hidden');
+            photoControls.classList.add('hidden');
+            accountSubText.innerText = "Fitness Reel Video";
+            helperTip.innerText = "Tip: Record a video reel inside your Instagram frame!";
+            resetViews();
+        });
+
+        function resetViews() {
+            video.classList.remove('hidden');
+            photoPreview.classList.add('hidden');
+            videoPreview.classList.add('hidden');
+            videoPreview.src = "";
+            captureBtn.classList.remove('hidden');
+            retakePhotoBtn.classList.add('hidden');
+            downloadPhotoBtn.classList.add('hidden');
+            startRecBtn.classList.remove('hidden');
+            stopRecBtn.classList.add('hidden');
+            retakeVideoBtn.classList.add('hidden');
+            downloadVideoBtn.classList.add('hidden');
+            recIndicator.classList.add('hidden');
+            if(timerInterval) clearInterval(timerInterval);
+        }
+
+        // --- PHOTO CAPTURE LOGIC ---
         captureBtn.addEventListener('click', () => {
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth || 640;
             canvas.height = video.videoHeight || 640;
             const ctx = canvas.getContext('2d');
             
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
             photoPreview.src = canvas.toDataURL('image/png');
-            
             video.classList.add('hidden');
             photoPreview.classList.remove('hidden');
 
             captureBtn.classList.add('hidden');
-            retakeBtn.classList.remove('hidden');
-            downloadBtn.classList.remove('hidden');
+            retakePhotoBtn.classList.remove('hidden');
+            downloadPhotoBtn.classList.remove('hidden');
         });
 
-        // Retake Photo
-        retakeBtn.addEventListener('click', () => {
+        retakePhotoBtn.addEventListener('click', () => {
             photoPreview.classList.add('hidden');
             video.classList.remove('hidden');
-
-            retakeBtn.classList.add('hidden');
-            downloadBtn.classList.add('hidden');
+            retakePhotoBtn.classList.add('hidden');
+            downloadPhotoBtn.classList.add('hidden');
             captureBtn.classList.remove('hidden');
         });
 
-        // Download Entire Instagram Frame
-        downloadBtn.addEventListener('click', async () => {
-            downloadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Generating...</span>';
-            
+        downloadPhotoBtn.addEventListener('click', async () => {
+            downloadPhotoBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Generating...</span>';
             try {
-                const canvas = await html2canvas(captureArea, {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: '#ffffff'
-                });
-
+                const canvas = await html2canvas(captureArea, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
                 const link = document.createElement('a');
                 link.download = 'forge-bowls-instagram-frame.png';
                 link.href = canvas.toDataURL('image/png');
                 link.click();
             } catch (err) {
-                console.error("Download error:", err);
-                alert("Failed to generate download. Please try long-pressing the image to save.");
+                alert("Download failed. Long press image to save.");
             } finally {
-                downloadBtn.innerHTML = '<i class="fa-solid fa-download"></i><span>Download Frame</span>';
+                downloadPhotoBtn.innerHTML = '<i class="fa-solid fa-download"></i><span>Download Frame</span>';
             }
+        });
+
+        // --- VIDEO REEL RECORDING LOGIC ---
+        startRecBtn.addEventListener('click', () => {
+            recordedChunks = [];
+            try {
+                mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm;codecs=vp9' });
+            } catch (e) {
+                mediaRecorder = new MediaRecorder(mediaStream);
+            }
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) recordedChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const videoUrl = URL.createObjectURL(blob);
+                videoPreview.src = videoUrl;
+                
+                video.classList.add('hidden');
+                videoPreview.classList.remove('hidden');
+                videoPreview.controls = true;
+
+                startRecBtn.classList.add('hidden');
+                stopRecBtn.classList.add('hidden');
+                retakeVideoBtn.classList.remove('hidden');
+                downloadVideoBtn.classList.remove('hidden');
+                downloadVideoBtn.href = videoUrl;
+            };
+
+            mediaRecorder.start();
+            startRecBtn.classList.add('hidden');
+            stopRecBtn.classList.remove('hidden');
+            recIndicator.classList.remove('hidden');
+
+            // Timer Counter
+            let seconds = 0;
+            recTimer.innerText = "00:00";
+            timerInterval = setInterval(() => {
+                seconds++;
+                let m = String(Math.floor(seconds / 60)).padStart(2, '0');
+                let s = String(seconds % 60).padStart(2, '0');
+                recTimer.innerText = `${m}:${s}`;
+            }, 1000);
+        });
+
+        stopRecBtn.addEventListener('click', () => {
+            if(mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            clearInterval(timerInterval);
+            recIndicator.classList.add('hidden');
+        });
+
+        retakeVideoBtn.addEventListener('click', () => {
+            videoPreview.classList.add('hidden');
+            videoPreview.src = "";
+            video.classList.remove('hidden');
+            retakeVideoBtn.classList.add('hidden');
+            downloadVideoBtn.classList.add('hidden');
+            startRecBtn.classList.remove('hidden');
         });
     </script>
 </body>
