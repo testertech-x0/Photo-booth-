@@ -16,7 +16,6 @@
             border: 1px solid #dbdbdb;
             box-shadow: 0 10px 25px rgba(36, 76, 56, 0.15);
         }
-        /* Fix mirror effect for normal camera view */
         #video {
             transform: scaleX(1); 
         }
@@ -33,23 +32,24 @@
     <!-- Main Booth Container -->
     <main class="w-full max-w-md flex flex-col items-center">
         
-        <!-- Instagram Post Frame Wrapper (This entire element gets rendered into download) -->
+        <!-- Instagram Post Frame Wrapper -->
         <div id="captureArea" class="ig-frame w-full rounded-xl overflow-hidden relative mb-4">
             
-            <!-- Instagram Header (Top Bar) -->
+            <!-- Instagram Header (Top Bar) - Perfectly Centered Items -->
             <div class="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-100">
                 <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#C9794B] to-[#244C38] p-[2px] flex items-center justify-center">
+                    <!-- Perfectly Centered Logo Circle -->
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#C9794B] to-[#244C38] p-[2px] flex items-center justify-center shrink-0">
                         <div class="w-full h-full bg-white rounded-full flex items-center justify-center">
-                            <span class="text-[10px] font-bold text-[#244C38]">FB</span>
+                            <span class="text-[11px] font-bold text-[#244C38] leading-none">FB</span>
                         </div>
                     </div>
-                    <div>
+                    <div class="flex flex-col justify-center">
                         <p class="text-xs font-semibold text-gray-900 leading-tight">forgebowls</p>
                         <p class="text-[10px] text-gray-500 leading-tight">Healthy Nutrition Bar</p>
                     </div>
                 </div>
-                <div class="text-gray-800 text-sm">
+                <div class="text-gray-800 text-sm flex items-center justify-center">
                     <i class="fa-solid fa-ellipsis"></i>
                 </div>
             </div>
@@ -62,21 +62,21 @@
                 <!-- Captured Snapshot Image Element -->
                 <img id="photoPreview" class="hidden w-full h-full object-cover absolute inset-0" alt="Captured Photo" />
 
-                <!-- Live Organic Overlay Badge inside camera -->
-                <div class="absolute bottom-3 left-3 bg-[#244C38]/85 backdrop-blur-md text-[#F5F1E7] px-3 py-1.5 rounded-lg text-xs font-medium flex items-center space-x-2 border border-[#A5B98A]/30">
-                    <i class="fa-solid fa-bowl-food text-[#C9794B]"></i>
-                    <span>#ForgeYourStrength</span>
+                <!-- Perfectly Centered Live Organic Overlay Badge Inside Camera -->
+                <div class="absolute bottom-4 left-4 bg-[#244C38]/90 backdrop-blur-md text-[#F5F1E7] px-3.5 py-2 rounded-lg text-xs font-medium flex items-center justify-center space-x-2 border border-[#A5B98A]/30 shadow-md">
+                    <i class="fa-solid fa-bowl-food text-[#C9794B] flex items-center justify-center"></i>
+                    <span class="leading-none pt-0.5">#ForgeYourStrength</span>
                 </div>
             </div>
 
             <!-- Instagram Action Bar -->
             <div class="bg-white px-4 py-2.5 flex items-center justify-between">
                 <div class="flex items-center space-x-4 text-xl text-gray-800">
-                    <button id="likeBtn" class="hover:text-red-500 transition focus:outline-none"><i class="fa-regular fa-heart"></i></button>
-                    <button class="hover:text-gray-600 transition"><i class="fa-regular fa-comment"></i></button>
-                    <button class="hover:text-gray-600 transition"><i class="fa-regular fa-paper-plane"></i></button>
+                    <button id="likeBtn" class="hover:text-red-500 transition focus:outline-none flex items-center justify-center"><i class="fa-regular fa-heart"></i></button>
+                    <button class="hover:text-gray-600 transition flex items-center justify-center"><i class="fa-regular fa-comment"></i></button>
+                    <button class="hover:text-gray-600 transition flex items-center justify-center"><i class="fa-regular fa-paper-plane"></i></button>
                 </div>
-                <div class="text-xl text-gray-800">
+                <div class="text-xl text-gray-800 flex items-center justify-center">
                     <i class="fa-regular fa-bookmark"></i>
                 </div>
             </div>
@@ -128,8 +128,6 @@
         const likeBtn = document.getElementById('likeBtn');
         const captureArea = document.getElementById('captureArea');
 
-        let capturedDataUrl = '';
-
         // Toggle Heart Like
         let liked = false;
         likeBtn.addEventListener('click', () => {
@@ -141,7 +139,7 @@
             }
         });
 
-        // Initialize Camera Stream (Without unwanted mirror flip)
+        // Initialize Camera Stream
         async function initCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -157,24 +155,20 @@
 
         initCamera();
 
-        // Capture Snapshot using Canvas element to freeze frame
+        // Capture Snapshot
         captureBtn.addEventListener('click', () => {
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth || 640;
             canvas.height = video.videoHeight || 640;
             const ctx = canvas.getContext('2d');
             
-            // Draw current video frame
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            // Set image preview source
             photoPreview.src = canvas.toDataURL('image/png');
             
-            // Hide live video, show static photo preview
             video.classList.add('hidden');
             photoPreview.classList.remove('hidden');
 
-            // Toggle buttons
             captureBtn.classList.add('hidden');
             retakeBtn.classList.remove('hidden');
             downloadBtn.classList.remove('hidden');
@@ -190,12 +184,11 @@
             captureBtn.classList.remove('hidden');
         });
 
-        // Download Entire Instagram Frame using html2canvas
+        // Download Entire Instagram Frame
         downloadBtn.addEventListener('click', async () => {
             downloadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Generating...</span>';
             
             try {
-                // Render the complete IG frame wrapper into a high-res canvas
                 const canvas = await html2canvas(captureArea, {
                     scale: 2,
                     useCORS: true,
