@@ -9,7 +9,8 @@
 <style>
   body { background-color:#F5F1E7; font-family:system-ui,-apple-system,sans-serif; }
   .ig-frame { background:#fff; border:1px solid #dbdbdb; box-shadow:0 10px 25px rgba(36,76,56,.15); }
-  /* No CSS mirroring anywhere: preview, photo and video are all TRUE (non-mirrored) view */
+  /* Live preview flip is driven by the Flip button; the exported photo/video uses the same flag */
+  #video.flip { transform: scaleX(-1); }
 </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-between p-4">
@@ -44,7 +45,11 @@
     </div>
 
     <div class="relative w-full aspect-square bg-black overflow-hidden">
-      <video id="video" autoplay playsinline muted class="w-full h-full object-cover"></video>
+      <video id="video" autoplay playsinline muted class="w-full h-full object-cover flip"></video>
+
+      <button id="flipBtn" type="button" class="absolute top-3 right-3 z-20 bg-black/55 text-white text-[11px] font-semibold px-3 h-8 rounded-full inline-flex items-center gap-1.5 leading-none">
+        <i class="fa-solid fa-arrows-left-right"></i><span>Flip: ON</span>
+      </button>
 
       <div id="recIndicator" class="hidden absolute top-3 left-3 bg-red-600 text-white px-2.5 py-1 rounded-md text-[10px] font-bold items-center gap-1.5 animate-pulse z-20" style="display:none">
         <span class="w-2 h-2 rounded-full bg-white inline-block"></span>
@@ -114,6 +119,15 @@ let timerInterval = null, recording = false, liked = false, mode = 'photo';
 /* show/hide helpers (buttons use flex, so toggle via style to avoid Tailwind conflicts) */
 const show = (el, d='flex') => { el.classList.remove('hidden'); el.style.display = d; };
 const hide = el => { el.classList.add('hidden'); el.style.display = 'none'; };
+
+/* flip = true: the raw camera image is flipped left-right in BOTH the live preview and the exported
+   photo/video, so what you see is exactly what you download. Tap the Flip button if it looks reversed. */
+let flip = true;
+$('flipBtn').addEventListener('click', () => {
+  flip = !flip;
+  video.classList.toggle('flip', flip);
+  $('flipBtn').querySelector('span').innerText = 'Flip: ' + (flip ? 'ON' : 'OFF');
+});
 
 likeBtn.addEventListener('click', () => {
   liked = !liked;
@@ -185,6 +199,7 @@ function drawFrame(canvas, src) {
   const sw = src.videoWidth || src.width, sh = src.videoHeight || src.height;
   if (sw && sh) {
     const side = Math.min(sw, sh);
+    if (flip) { ctx.translate(MEDIA, 0); ctx.scale(-1, 1); }
     ctx.drawImage(src, (sw - side) / 2, (sh - side) / 2, side, side, 0, HEAD, MEDIA, MEDIA);
   }
   ctx.restore();
@@ -343,18 +358,4 @@ stopRecBtn.addEventListener('click', () => {
 
 retakeVideoBtn.addEventListener('click', () => {
   resultVideo.pause(); resultVideo.removeAttribute('src'); resultVideo.load();
-  hide(resultBox); captureArea.classList.remove('hidden'); captureArea.style.display = '';
-  hide(retakeVideoBtn); hide(downloadVideoBtn); show(startRecBtn);
-});
-
-downloadVideoBtn.addEventListener('click', () => {
-  if (!videoBlob) return;
-  const url = URL.createObjectURL(videoBlob);
-  const a = document.createElement('a');
-  a.style.display = 'none'; a.href = url; a.download = 'forge-bowls-instagram-reel.' + videoExt;
-  document.body.appendChild(a); a.click();
-  setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
-});
-</script>
-</body>
-</html>
+  hide(resultBox); captureArea.classList.remove('hidden'); captureArea.styl
