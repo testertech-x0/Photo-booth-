@@ -16,8 +16,9 @@
             border: 1px solid #dbdbdb;
             box-shadow: 0 10px 25px rgba(36, 76, 56, 0.15);
         }
+        /* Enforce True Non-Mirrored View across all elements */
         #video, #photoPreview, #videoPreview {
-            transform: scaleX(-1); /* True non-mirrored view */
+            transform: scaleX(-1);
         }
     </style>
 </head>
@@ -32,7 +33,7 @@
     <!-- Main Booth Container -->
     <main class="w-full max-w-md flex flex-col items-center">
         
-        <!-- Mode Switcher Tabs (Photo / Video Reel) -->
+        <!-- Mode Switcher Tabs -->
         <div class="w-full flex bg-[#e8e2d5] p-1 rounded-xl mb-3 shadow-inner">
             <button id="photoModeBtn" class="flex-1 py-2 text-xs font-bold rounded-lg bg-[#244C38] text-[#F5F1E7] transition shadow">
                 <i class="fa-solid fa-camera mr-1"></i> Photo Mode
@@ -42,10 +43,10 @@
             </button>
         </div>
 
-        <!-- Instagram Post/Reel Frame Wrapper -->
+        <!-- Instagram Post/Reel Frame Wrapper (This whole container is captured) -->
         <div id="captureArea" class="ig-frame w-full rounded-xl overflow-hidden relative mb-4">
             
-            <!-- Instagram Header (Top Bar) - Perfectly Centered -->
+            <!-- Instagram Header (Top Bar) -->
             <div class="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-100">
                 <div class="flex items-center space-x-3">
                     <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#C9794B] to-[#244C38] p-[2px] flex items-center justify-center shrink-0">
@@ -74,13 +75,13 @@
                 <!-- Recorded Video Reel Element -->
                 <video id="videoPreview" class="hidden w-full h-full object-cover absolute inset-0" controls playsinline></video>
 
-                <!-- Recording Indicator Badge (Hidden by default) -->
+                <!-- Recording Indicator Badge -->
                 <div id="recIndicator" class="hidden absolute top-3 left-3 bg-red-600 text-white px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center space-x-1.5 animate-pulse z-20">
                     <span class="w-2 h-2 rounded-full bg-white"></span>
                     <span>REC <span id="recTimer">00:00</span></span>
                 </div>
 
-                <!-- Perfectly Centered Live Organic Overlay Badge Inside Camera -->
+                <!-- Overlay Badge Inside Camera -->
                 <div class="absolute bottom-4 left-4 bg-[#244C38]/90 backdrop-blur-md text-[#F5F1E7] px-3.5 py-2 rounded-lg text-xs font-medium flex items-center justify-center space-x-2 border border-[#A5B98A]/30 shadow-md z-10">
                     <i class="fa-solid fa-bowl-food text-[#C9794B] flex items-center justify-center"></i>
                     <span class="leading-none pt-0.5">#ForgeYourStrength</span>
@@ -107,7 +108,7 @@
 
         </div>
 
-        <!-- Controls / Buttons (Photo Mode) -->
+        <!-- Controls (Photo Mode) -->
         <div id="photoControls" class="w-full flex space-x-3">
             <button id="captureBtn" class="flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
                 <i class="fa-solid fa-camera"></i>
@@ -123,7 +124,7 @@
             </button>
         </div>
 
-        <!-- Controls / Buttons (Video Reel Mode) -->
+        <!-- Controls (Video Reel Mode) -->
         <div id="videoControls" class="w-full hidden space-x-3">
             <button id="startRecBtn" class="flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
                 <i class="fa-solid fa-circle text-red-500"></i>
@@ -137,10 +138,10 @@
                 <i class="fa-solid fa-rotate-right"></i>
                 <span>Retake Reel</span>
             </button>
-            <a id="downloadVideoBtn" class="hidden flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-center" download="forge-bowls-reel.webm">
+            <button id="downloadVideoBtn" class="hidden flex-1 bg-[#244C38] hover:bg-[#1a3829] text-[#F5F1E7] font-semibold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
                 <i class="fa-solid fa-download"></i>
-                <span>Download Reel</span>
-            </a>
+                <span>Download Reel Frame</span>
+            </button>
         </div>
 
         <p id="helperTip" class="text-[11px] text-gray-500 mt-3 text-center">
@@ -153,10 +154,9 @@
         &copy; 2026 Forge Bowls. Powered by JC Oats.
     </footer>
 
-    <!-- Include html2canvas library for photos -->
+    <!-- Include html2canvas and Whammy/RecordRTC or Canvas Recording approach for full frame video export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <!-- JavaScript Logic -->
     <script>
         const video = document.getElementById('video');
         const photoPreview = document.getElementById('photoPreview');
@@ -169,12 +169,10 @@
         const accountSubText = document.getElementById('accountSubText');
         const helperTip = document.getElementById('helperTip');
 
-        // Photo elements
         const captureBtn = document.getElementById('captureBtn');
         const retakePhotoBtn = document.getElementById('retakePhotoBtn');
         const downloadPhotoBtn = document.getElementById('downloadPhotoBtn');
 
-        // Video elements
         const startRecBtn = document.getElementById('startRecBtn');
         const stopRecBtn = document.getElementById('stopRecBtn');
         const retakeVideoBtn = document.getElementById('retakeVideoBtn');
@@ -189,7 +187,6 @@
         let mediaRecorder = null;
         let recordedChunks = [];
         let timerInterval = null;
-        let currentMode = 'photo';
 
         // Toggle Like
         let liked = false;
@@ -198,11 +195,11 @@
             likeBtn.innerHTML = liked ? '<i class="fa-solid fa-heart text-red-500"></i>' : '<i class="fa-regular fa-heart"></i>';
         });
 
-        // Initialize Camera
+        // Initialize Camera with True View Support
         async function initCamera() {
             try {
                 mediaStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'user', width: { ideal: 1080 }, height: { ideal: 1080 } }, 
+                    video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 720 } }, 
                     audio: true 
                 });
                 video.srcObject = mediaStream;
@@ -216,7 +213,6 @@
 
         // Switch Modes
         photoModeBtn.addEventListener('click', () => {
-            currentMode = 'photo';
             photoModeBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-[#244C38] text-[#F5F1E7] transition shadow";
             videoModeBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg text-[#343A32] transition";
             photoControls.classList.remove('hidden');
@@ -227,7 +223,6 @@
         });
 
         videoModeBtn.addEventListener('click', () => {
-            currentMode = 'video';
             videoModeBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-[#244C38] text-[#F5F1E7] transition shadow";
             photoModeBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg text-[#343A32] transition";
             videoControls.classList.remove('hidden');
@@ -241,6 +236,7 @@
             video.classList.remove('hidden');
             photoPreview.classList.add('hidden');
             videoPreview.classList.add('hidden');
+            videoPreview.pause();
             videoPreview.src = "";
             captureBtn.classList.remove('hidden');
             retakePhotoBtn.classList.add('hidden');
@@ -253,7 +249,7 @@
             if(timerInterval) clearInterval(timerInterval);
         }
 
-        // --- PHOTO CAPTURE LOGIC ---
+        // --- PHOTO CAPTURE (True View Preserved) ---
         captureBtn.addEventListener('click', () => {
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth || 640;
@@ -296,22 +292,52 @@
             }
         });
 
-        // --- VIDEO REEL RECORDING LOGIC ---
+        // --- VIDEO REEL RECORDING (True View Canvas Stream Integration) ---
+        let canvasStreamRecorder = null;
+        let recordedVideoBlob = null;
+
         startRecBtn.addEventListener('click', () => {
             recordedChunks = [];
-            try {
-                mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm;codecs=vp9' });
-            } catch (e) {
-                mediaRecorder = new MediaRecorder(mediaStream);
+            
+            // Create an offscreen canvas to composite the true-view video with the exact orientation into the stream
+            const recordCanvas = document.createElement('canvas');
+            recordCanvas.width = 640;
+            recordCanvas.height = 640;
+            const rctx = recordCanvas.getContext('2d');
+
+            let isRecordingActive = true;
+            function drawCanvasLoop() {
+                if(!isRecordingActive) return;
+                rctx.save();
+                rctx.translate(recordCanvas.width, 0);
+                rctx.scale(-1, 1); // Enforce true non-mirrored view in recorded stream
+                rctx.drawImage(video, 0, 0, recordCanvas.width, recordCanvas.height);
+                rctx.restore();
+                requestAnimationFrame(drawCanvasLoop);
+            }
+            drawCanvasLoop();
+
+            const canvasStream = recordCanvas.captureStream(30);
+            // Combine camera audio track if available
+            const audioTracks = mediaStream.getAudioTracks();
+            if(audioTracks.length > 0) {
+                canvasStream.addTrack(audioTracks[0]);
             }
 
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) recordedChunks.push(event.data);
+            try {
+                canvasStreamRecorder = new MediaRecorder(canvasStream, { mimeType: 'video/webm;codecs=vp9' });
+            } catch(e) {
+                canvasStreamRecorder = new MediaRecorder(canvasStream);
+            }
+
+            canvasStreamRecorder.ondataavailable = (e) => {
+                if(e.data.size > 0) recordedChunks.push(e.data);
             };
 
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                const videoUrl = URL.createObjectURL(blob);
+            canvasStreamRecorder.onstop = () => {
+                isRecordingActive = false;
+                recordedVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+                const videoUrl = URL.createObjectURL(recordedVideoBlob);
                 videoPreview.src = videoUrl;
                 
                 video.classList.add('hidden');
@@ -322,15 +348,13 @@
                 stopRecBtn.classList.add('hidden');
                 retakeVideoBtn.classList.remove('hidden');
                 downloadVideoBtn.classList.remove('hidden');
-                downloadVideoBtn.href = videoUrl;
             };
 
-            mediaRecorder.start();
+            canvasStreamRecorder.start();
             startRecBtn.classList.add('hidden');
             stopRecBtn.classList.remove('hidden');
             recIndicator.classList.remove('hidden');
 
-            // Timer Counter
             let seconds = 0;
             recTimer.innerText = "00:00";
             timerInterval = setInterval(() => {
@@ -342,8 +366,8 @@
         });
 
         stopRecBtn.addEventListener('click', () => {
-            if(mediaRecorder && mediaRecorder.state !== 'inactive') {
-                mediaRecorder.stop();
+            if(canvasStreamRecorder && canvasStreamRecorder.state !== 'inactive') {
+                canvasStreamRecorder.stop();
             }
             clearInterval(timerInterval);
             recIndicator.classList.add('hidden');
@@ -356,6 +380,21 @@
             retakeVideoBtn.classList.add('hidden');
             downloadVideoBtn.classList.add('hidden');
             startRecBtn.classList.remove('hidden');
+        });
+
+        downloadVideoBtn.addEventListener('click', () => {
+            if(!recordedVideoBlob) return;
+            const url = URL.createObjectURL(recordedVideoBlob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'forge-bowls-instagram-reel.webm';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
         });
     </script>
 </body>
